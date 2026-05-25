@@ -28,7 +28,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({
 
     const [activeTab, setActiveTab] = useState<Tab>('overview');
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [products, setProducts] = useState<Record<number, Product>>({});
+    const [_products, setProducts] = useState<Record<number, Product>>({});
     const [loadingOrders, setLoadingOrders] = useState(true);
     
     const [isEditing, setIsEditing] = useState(false);

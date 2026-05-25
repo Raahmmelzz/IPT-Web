@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 
 import type { Product, Customer } from './types';
-import { productAPI, customerAPI } from './api';
+import { productAPI } from './api';
 
 // Layout Components
 import Navbar from './LayoutComponents/Navbar';
@@ -50,7 +50,7 @@ const Store: React.FC = () => {
     const [flyingItems, setFlyingItems] = useState<FlyingItemData[]>([]); 
     const [lastOrderData, setLastOrderData] = useState<OrderSnapshot | null>(null);
 
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [_isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     const loadProducts = useCallback(async () => {
         try {

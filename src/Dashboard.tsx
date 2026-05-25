@@ -9,7 +9,7 @@ const Dashboard: React.FC = () => {
     
     // 1. Create state to hold the data the components need
     const [products, setProducts] = useState([]);
-    const [customers, setCustomers] = useState([]);
+    const [_customers, setCustomers] = useState([]);
 
     // 2. Create a refresh function to fetch data from your Django backend
     const refreshData = async () => {

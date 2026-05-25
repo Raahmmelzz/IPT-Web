@@ -18,7 +18,7 @@ interface NavbarProps {
 // ── Track Order Modal Body ─────────────────────────────────────────────────
 const TrackOrderBody: React.FC<{ loggedInCustomer: Customer | null }> = ({ loggedInCustomer }) => {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [products, setProducts] = useState<Record<number, Product>>({});
+    const [_products, setProducts] = useState<Record<number, Product>>({});
     const [loading, setLoading]   = useState(true);
     const [error, setError]       = useState('');
 
@@ -153,7 +153,7 @@ const Navbar: React.FC<NavbarProps> = ({
     const navigate = useNavigate();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showHelp, setShowHelp]                   = useState(false);
-    const [notifications, setNotifications]         = useState(SAMPLE_NOTIFICATIONS);
+    const [notifications, _setNotifications]         = useState(SAMPLE_NOTIFICATIONS);
     const [helpModal, setHelpModal]                 = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen]   = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
