@@ -71,18 +71,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     // ── Signup form state ──
     const [signupData, setSignupData] = useState({ name: '', username: '', email: '', number: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
-    const [signupStep, setSignupStep] = useState<'form' | 'otp'>('form');
-    const [phoneOtp, setPhoneOtp] = useState<string[]>(blank6());
-    const [otpError, setOtpError] = useState('');
-    const [isSending, setIsSending] = useState(false);
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [resendCooldown, setResendCooldown] = useState(0);
-
-    React.useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
-        return () => clearTimeout(t);
-    }, [resendCooldown]);
+    const [signupError, setSignupError] = useState('');
+    const [isSigningUp, setIsSigningUp] = useState(false);
 
     React.useEffect(() => {
         if (loginResendCooldown <= 0) return;
@@ -149,46 +139,29 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     };
 
     // ── Signup functions ──
-    const sendOtp = async () => {
+    const doSignup = async () => {
         if (!signupData.name || !signupData.username || !signupData.email || !signupData.number || !signupData.password) {
-            alert('Please fill in all fields before continuing.');
+            setSignupError('Please fill in all fields.');
             return;
         }
-        setIsSending(true);
+        setIsSigningUp(true);
+        setSignupError('');
         try {
-            await customerAPI.sendOtp(signupData.email);
-            setPhoneOtp(blank6()); setOtpError(''); setSignupStep('otp'); setResendCooldown(60);
-        } catch (err: any) {
-            alert(err.response?.data?.error || 'Failed to send verification email.');
-        } finally {
-            setIsSending(false);
-        }
-    };
-
-    const verifyOtp = async () => {
-        const entered = phoneOtp.join('');
-        if (entered.length < 6) { setOtpError('Please enter the full 6-digit code.'); return; }
-        setIsVerifying(true);
-        try {
-            await customerAPI.signupWithOtp({ ...signupData, otp: entered });
-            setOtpError('');
+            await customerAPI.signupWithOtp(signupData);
             setSignupData({ name: '', username: '', email: '', number: '', password: '' });
-            setSignupStep('form');
             setAuthMode('login');
-            alert('Account created! Please log in.');
+            alert('Account created! Check your email for a verification code, then log in.');
         } catch (err: any) {
-            setOtpError(err.response?.data?.error || 'Incorrect or expired code.');
+            setSignupError(err.response?.data?.error || 'Failed to create account.');
         } finally {
-            setIsVerifying(false);
+            setIsSigningUp(false);
         }
     };
-
-    const resetSignupToForm = () => { setSignupStep('form'); setPhoneOtp(blank6()); setOtpError(''); };
 
     const switchMode = (mode: 'login' | 'signup') => {
         setAuthMode(mode);
         resetLoginToForm();
-        resetSignupToForm();
+        setSignupError('');
     };
 
     const inputClass = "w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white font-bold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-500";
@@ -297,8 +270,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         </motion.div>
                     )}
 
-                    {/* ══ SIGN UP — FORM ══ */}
-                    {authMode === 'signup' && signupStep === 'form' && (
+                    {/* ══ SIGN UP ══ */}
+                    {authMode === 'signup' && (
                         <div className="space-y-4 max-h-[55vh] sm:max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
                             <div>
                                 <label className={labelClass}>Full Name</label>
@@ -328,53 +301,23 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                                     </button>
                                 </div>
                                 {signupData.password && (
-                                    <div className="mt-3 space-y-2">
+                                    <div className="mt-3">
                                         <div className="flex gap-1">
                                             {[1,2,3,4,5].map(i => <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= strength.passed ? sConfig.color : 'bg-white/10'}`} />)}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="pt-4">
-                                <button type="button" onClick={sendOtp} disabled={isSending}
+                            <AnimatePresence>
+                                {signupError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center text-xs font-black text-red-400 bg-red-500/10 py-2 rounded-lg">⚠ {signupError}</motion.p>}
+                            </AnimatePresence>
+                            <div className="pt-2">
+                                <button type="button" onClick={doSignup} disabled={isSigningUp}
                                     className="w-full bg-emerald-500 text-white font-black text-sm uppercase tracking-widest py-4 rounded-xl hover:bg-emerald-400 active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-                                    {isSending ? 'Sending Code...' : 'Create Account'}
+                                    {isSigningUp ? 'Creating Account...' : 'Create Account'}
                                 </button>
                             </div>
                         </div>
-                    )}
-
-                    {/* ══ SIGN UP — OTP ══ */}
-                    {authMode === 'signup' && signupStep === 'otp' && (
-                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-                            <button type="button" onClick={resetSignupToForm} className="text-xs font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest flex items-center gap-2">
-                                <span>←</span> Back
-                            </button>
-                            <div className="text-center space-y-2">
-                                <h3 className="text-xl font-black text-white tracking-tight">Verify Email</h3>
-                                <p className="text-sm text-white/50 font-bold">Code sent to <span className="text-indigo-400">{signupData.email}</span></p>
-                            </div>
-                            <OtpInput otp={phoneOtp} onChange={setPhoneOtp} />
-                            <AnimatePresence>
-                                {otpError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center text-xs font-black text-red-400 bg-red-500/10 py-2 rounded-lg">⚠ {otpError}</motion.p>}
-                            </AnimatePresence>
-                            <div className="text-center">
-                                {resendCooldown > 0 ? (
-                                    <span className="text-xs font-black text-white/30 uppercase tracking-widest">Resend in {resendCooldown}s</span>
-                                ) : (
-                                    <button type="button" onClick={sendOtp} disabled={isSending}
-                                        className="text-xs font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest disabled:opacity-50">
-                                        {isSending ? 'Sending...' : 'Resend Code'}
-                                    </button>
-                                )}
-                            </div>
-                            <div className="pt-2">
-                                <button type="button" onClick={verifyOtp} disabled={isVerifying}
-                                    className="w-full bg-emerald-500 text-white font-black text-sm uppercase tracking-widest py-4 rounded-xl hover:bg-emerald-400 active:scale-[0.98] transition-all disabled:opacity-50">
-                                    {isVerifying ? 'Verifying...' : 'Complete Signup'}
-                                </button>
-                            </div>
-                        </motion.div>
                     )}
                 </motion.div>
             </div>
