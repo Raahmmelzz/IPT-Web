@@ -7,7 +7,7 @@ interface Message {
     text: string;
 }
 
-const CHAT_URL = 'http://localhost:8000/api/chat/';
+const CHAT_URL = 'https://rammel29.pythonanywhere.com/api/chat/';
 
 const Chatbot: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
