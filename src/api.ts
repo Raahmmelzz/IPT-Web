@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Customer, Invoice } from './types';
 
-const API_URL = 'https://ipt-backend-production-717e.up.railway.app/api/';
+const API_URL = 'https://rammel29.pythonanywhere.com/api/';
 
 export const customerAPI = {
     getCustomers: () => axios.get(`${API_URL}customers/`),
